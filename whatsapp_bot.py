@@ -32,34 +32,43 @@ def webhook():
 
     try:
         message = data["entry"][0]["changes"][0]["value"]["messages"][0]
-        from_number = message["from"]
+        sender = message["from"]
         text = message["text"]["body"]
 
-        send_message(from_number, f"You said: {text}")
+        print("Message:", text)
+
+        if text.lower() == "hi":
+            send_message(sender, "Hello bro 😄")
+
+        elif text.lower() == "price":
+            send_message(sender, "Milk price today is ₹58/L")
+
+        else:
+            send_message(sender, f"You said: {text}")
 
     except Exception as e:
         print("Error:", e)
 
-    return "OK", 200
+    return "ok", 200
 
 
-def send_message(to, text):
-    url = f"https://graph.facebook.com/v21.0/{PHONE_NUMBER_ID}/messages"
+def send_message(to, message):
+    url = f"https://graph.facebook.com/v25.0/{PHONE_NUMBER_ID}/messages"
 
     headers = {
         "Authorization": f"Bearer {WHATSAPP_TOKEN}",
         "Content-Type": "application/json"
     }
 
-    payload = {
+    data = {
         "messaging_product": "whatsapp",
         "to": to,
-        "text": {"body": text}
+        "type": "text",
+        "text": {"body": message}
     }
 
-    response = requests.post(url, headers=headers, json=payload)
+    response = requests.post(url, headers=headers, json=data)
 
-    print("WA SEND -> status:", response.status_code)
     print(response.text)
 
 
