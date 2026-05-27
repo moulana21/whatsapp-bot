@@ -28,10 +28,12 @@ def verify():
 @app.route("/webhook", methods=["POST"])
 def webhook():
     data = request.get_json()
+
     print("Incoming:", data)
 
     try:
         message = data["entry"][0]["changes"][0]["value"]["messages"][0]
+
         sender = message["from"]
         text = message["text"]["body"]
 
@@ -64,10 +66,16 @@ def send_message(to, message):
         "messaging_product": "whatsapp",
         "to": to,
         "type": "text",
-        "text": {"body": message}
+        "text": {
+            "body": message
+        }
     }
 
-    response = requests.post(url, headers=headers, json=data)
+    response = requests.post(
+        url,
+        headers=headers,
+        json=data
+    )
 
     print(response.status_code)
     print(response.text)
