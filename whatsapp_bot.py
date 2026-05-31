@@ -77,9 +77,14 @@ def send_message(to, message):
         json=data
     )
 
-    print(response.status_code)
-    print(response.text)
+    print("========== WHATSAPP DEBUG ==========")
+    print("PHONE_NUMBER_ID =", PHONE_NUMBER_ID)
+    print("TO =", to)
+    print("MESSAGE =", message)
+    print("STATUS =", response.status_code)
+    print("RESPONSE =", response.text)
+    print("===================================")
 
 
 if __name__ == "__main__":
-    app.run(port=5000)
+    app.run(host="0.0.0.0", port=5000)
