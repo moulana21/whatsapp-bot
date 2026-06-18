@@ -1,93 +1,23 @@
-from flask import Flask, request
-from dotenv import load_dotenv
-import requests
-import os
-import random
-
-load_dotenv()
-
-app = Flask(__name__)
-
-VERIFY_TOKEN = os.getenv("VERIFY_TOKEN")
-WHATSAPP_TOKEN = os.getenv("WHATSAPP_TOKEN")
-PHONE_NUMBER_ID = os.getenv("PHONE_NUMBER_ID")
-
-customers = {}
-orders = {}
-
-MENU = {
-    "1": {"name": "Chicken Mandi", "price": 499},
-    "2": {"name": "Mutton Mandi", "price": 699},
-    "3": {"name": "Fish Mandi", "price": 599},
-    "4": {"name": "Shawarma", "price": 120}
-}
-
-
-@app.route("/webhook", methods=["GET"])
-def verify():
-    mode = request.args.get("hub.mode")
-    token = request.args.get("hub.verify_token")
-    challenge = request.args.get("hub.challenge")
-
-    if mode == "subscribe" and token == VERIFY_TOKEN:
-        return challenge, 200
-
-    return "Verification failed", 403
-
-
-@app.route("/webhook", methods=["POST"])
-def webhook():
-    data = request.get_json()
-
-    try:
-        message = data["entry"][0]["changes"][0]["value"]["messages"][0]
-
-        sender = message["from"]
-        text = message["text"]["body"].strip()
-
-        handle_message(sender, text)
-
-    except Exception as e:
-        print("Error:", e)
-
-    return "ok", 200
-
-
-def show_menu(sender, customer_name):
-    send_message(
-        sender,
-        f"""🍽 Welcome {customer_name}
-
-🏠 JSM MANDI HOUSE
-
-1. Chicken Mandi - ₹499
-2. Mutton Mandi - ₹699
-3. Fish Mandi - ₹599
-4. Shawarma - ₹120
-
-Reply with item number."""
-    )
-
-
 def handle_message(sender, text):
 
     lower_text = text.lower()
 
-    # First time customer
+    # New customer
     if sender not in customers:
 
         if lower_text == "hi":
-            customers[sender] = {"waiting_name": True}
+            customers[sender] = {
+                "waiting_name": True
+            }
 
             send_message(
                 sender,
-                "👋 Welcome to JSM MANDI HOUSE\n\nMay I know your name?"
+                "👋 Welcome to MANDI HOUSE\n\nMay I know your name?"
             )
             return
 
-        else:
-            send_message(sender, "Send HI to start.")
-            return
+        send_message(sender, "Send HI to start.")
+        return
 
     # Save customer name
     if customers[sender].get("waiting_name"):
@@ -95,19 +25,11 @@ def handle_message(sender, text):
         customers[sender]["name"] = text
         customers[sender]["waiting_name"] = False
 
-        show_menu(sender, text)
-        return
-
-    # Returning customer
-    if lower_text == "hi":
-
-        customer_name = customers[sender]["name"]
-
         send_message(
             sender,
-            f"""👋 Welcome back {customer_name}
+            f"""🍽 Welcome {text}
 
-🏠 JSM MANDI HOUSE
+🏠 MANDI HOUSE
 
 1. Chicken Mandi - ₹499
 2. Mutton Mandi - ₹699
@@ -118,8 +40,31 @@ Reply with item number."""
         )
         return
 
-    # Menu item selected
-    if text in MENU:
+    # Returning customer
+    if lower_text == "hi":
+
+        name = customers[sender]["name"]
+
+        send_message(
+            sender,
+            f"""👋 Welcome back {name}
+
+🏠 MANDI HOUSE
+
+1. Chicken Mandi - ₹499
+2. Mutton Mandi - ₹699
+3. Fish Mandi - ₹599
+4. Shawarma - ₹120
+
+Reply with item number."""
+        )
+        return
+
+    # Select menu item
+    if text in MENU and (
+        sender not in orders or
+        not orders[sender].get("awaiting_quantity")
+    ):
 
         orders[sender] = {
             "item": MENU[text]["name"],
@@ -130,7 +75,7 @@ Reply with item number."""
         send_message(sender, "How many plates?")
         return
 
-    # Quantity
+    # Quantity input
     if sender in orders and orders[sender].get("awaiting_quantity"):
 
         if text.isdigit():
@@ -173,13 +118,13 @@ Reply CONFIRM to place order."""
 
             order = orders[sender]
 
-            order_id = f"JSM{random.randint(1000,9999)}"
+            order_id = f"MH{random.randint(1000,9999)}"
 
             send_message(
                 sender,
                 f"""🎉 Order Confirmed
 
-🏠  MANDI HOUSE
+🏠 MANDI HOUSE
 
 Order ID: {order_id}
 
@@ -198,34 +143,3 @@ Thank you for ordering ❤️"""
         return
 
     send_message(sender, "Send HI to start ordering.")
-
-
-def send_message(to, message):
-
-    url = f"https://graph.facebook.com/v25.0/{PHONE_NUMBER_ID}/messages"
-
-    headers = {
-        "Authorization": f"Bearer {WHATSAPP_TOKEN}",
-        "Content-Type": "application/json"
-    }
-
-    data = {
-        "messaging_product": "whatsapp",
-        "to": to,
-        "type": "text",
-        "text": {
-            "body": message
-        }
-    }
-
-    response = requests.post(
-        url,
-        headers=headers,
-        json=data
-    )
-
-    print(response.text)
-
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
