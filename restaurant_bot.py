@@ -16,9 +16,10 @@ customers = {}
 orders = {}
 
 MENU = {
-    "1": {"name": "Chicken Biryani", "price": 250},
-    "2": {"name": "Mutton Biryani", "price": 350},
-    "3": {"name": "Shawarma", "price": 120}
+    "1": {"name": "Chicken Mandi", "price": 499},
+    "2": {"name": "Mutton Mandi", "price": 699},
+    "3": {"name": "Fish Mandi", "price": 599},
+    "4": {"name": "Shawarma", "price": 120}
 }
 
 
@@ -57,9 +58,12 @@ def show_menu(sender, customer_name):
         sender,
         f"""🍽 Welcome {customer_name}
 
-1. Chicken Biryani - ₹250
-2. Mutton Biryani - ₹350
-3. Shawarma - ₹120
+🏠 JSM MANDI HOUSE
+
+1. Chicken Mandi - ₹499
+2. Mutton Mandi - ₹699
+3. Fish Mandi - ₹599
+4. Shawarma - ₹120
 
 Reply with item number."""
     )
@@ -69,6 +73,7 @@ def handle_message(sender, text):
 
     lower_text = text.lower()
 
+    # First time customer
     if sender not in customers:
 
         if lower_text == "hi":
@@ -76,16 +81,16 @@ def handle_message(sender, text):
 
             send_message(
                 sender,
-                "👋 Welcome to Royal Grand Restaurant\n\nMay I know your name?"
+                "👋 Welcome to JSM MANDI HOUSE\n\nMay I know your name?"
             )
-
             return
 
-        elif customers.get(sender, {}).get("waiting_name"):
+        else:
+            send_message(sender, "Send HI to start.")
+            return
 
-            pass
-
-    if sender in customers and customers[sender].get("waiting_name"):
+    # Save customer name
+    if customers[sender].get("waiting_name"):
 
         customers[sender]["name"] = text
         customers[sender]["waiting_name"] = False
@@ -93,87 +98,88 @@ def handle_message(sender, text):
         show_menu(sender, text)
         return
 
+    # Returning customer
     if lower_text == "hi":
 
-        if sender in customers:
+        customer_name = customers[sender]["name"]
 
-            customer_name = customers[sender]["name"]
+        send_message(
+            sender,
+            f"""👋 Welcome back {customer_name}
 
-            if sender in orders:
+🏠 JSM MANDI HOUSE
 
-                last_order = orders[sender].get("item", "No previous order")
+1. Chicken Mandi - ₹499
+2. Mutton Mandi - ₹699
+3. Fish Mandi - ₹599
+4. Shawarma - ₹120
 
-                send_message(
-                    sender,
-                    f"""👋 Welcome back {customer_name}
-
-Last Order:
-{last_order}
-
-Would you like to order again?
-
-1. Chicken Biryani - ₹250
-2. Mutton Biryani - ₹350
-3. Shawarma - ₹120"""
-                )
-
-            else:
-                show_menu(sender, customer_name)
-
+Reply with item number."""
+        )
         return
 
-    elif text in MENU:
+    # Menu item selected
+    if text in MENU:
 
         orders[sender] = {
             "item": MENU[text]["name"],
-            "price": MENU[text]["price"]
+            "price": MENU[text]["price"],
+            "awaiting_quantity": True
         }
 
         send_message(sender, "How many plates?")
         return
 
-    elif sender in orders and text.isdigit():
+    # Quantity
+    if sender in orders and orders[sender].get("awaiting_quantity"):
 
-        qty = int(text)
+        if text.isdigit():
 
-        item = orders[sender]["item"]
-        price = orders[sender]["price"]
+            qty = int(text)
 
-        subtotal = qty * price
-        gst = round(subtotal * 0.05, 2)
-        total = round(subtotal + gst, 2)
+            item = orders[sender]["item"]
+            price = orders[sender]["price"]
 
-        orders[sender]["qty"] = qty
-        orders[sender]["subtotal"] = subtotal
-        orders[sender]["gst"] = gst
-        orders[sender]["total"] = total
+            subtotal = qty * price
+            gst = round(subtotal * 0.05, 2)
+            total = round(subtotal + gst, 2)
 
-        send_message(
-            sender,
-            f"""✅ Order Summary
+            orders[sender]["qty"] = qty
+            orders[sender]["subtotal"] = subtotal
+            orders[sender]["gst"] = gst
+            orders[sender]["total"] = total
+            orders[sender]["awaiting_quantity"] = False
 
-{item} x {qty}
+            send_message(
+                sender,
+                f"""✅ Order Summary
+
+Item: {item}
+Quantity: {qty}
 
 Subtotal: ₹{subtotal}
 GST (5%): ₹{gst}
 Total Bill: ₹{total}
 
 Reply CONFIRM to place order."""
-        )
+            )
 
         return
 
-    elif lower_text == "confirm":
+    # Confirm order
+    if lower_text == "confirm":
 
         if sender in orders:
 
             order = orders[sender]
 
-            order_id = f"RG{random.randint(1000,9999)}"
+            order_id = f"JSM{random.randint(1000,9999)}"
 
             send_message(
                 sender,
                 f"""🎉 Order Confirmed
+
+🏠  MANDI HOUSE
 
 Order ID: {order_id}
 
@@ -186,6 +192,8 @@ Total: ₹{order['total']}
 
 Thank you for ordering ❤️"""
             )
+
+            del orders[sender]
 
         return
 
