@@ -15,9 +15,10 @@ PHONE_NUMBER_ID = os.getenv("PHONE_NUMBER_ID")
 users = {}
 
 MENU = {
-    "1": {"name": "Chicken Biryani", "price": 250},
-    "2": {"name": "Mutton Biryani", "price": 350},
-    "3": {"name": "Shawarma", "price": 120}
+    "1": {"name": "Chicken Mandi", "price": 499},
+    "2": {"name": "Mutton Mandi", "price": 699},
+    "3": {"name": "Fish Mandi", "price": 599},
+    "4": {"name": "Shawarma", "price": 120}
 }
 
 
