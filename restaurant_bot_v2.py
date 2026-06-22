@@ -88,10 +88,10 @@ def handle_message(sender, text):
             f"""🍽 Welcome {text}
 
 Mandi House Menu
-
-1. Chicken Biryani - ₹250
-2. Mutton Biryani - ₹350
-3. Shawarma - ₹120
+1. Chicken Mandi - ₹499
+2. Mutton Mandi - ₹699
+3. Fish Mandi - ₹599
+4. Shawarma - ₹120
 
 Reply with item number or item name."""
         )
