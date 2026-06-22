@@ -126,8 +126,11 @@ Reply with item number or item name."""
         elif text_lower == "mutton biryani":
             selected = MENU["2"]
 
+        elif text_lower == "fish mandi":
+              selected = MENU["3"]    
+
         elif text_lower == "shawarma":
-            selected = MENU["3"]
+            selected = MENU["4"]
 
         if selected:
 
