@@ -36,6 +36,7 @@ def verify():
 
 @app.route("/webhook", methods=["POST"])
 def webhook():
+
     data = request.get_json()
 
     try:
@@ -46,17 +47,16 @@ def webhook():
 
         message = value["messages"][0]
 
-        sender = message["from"]
-
         if "text" not in message:
             return "ok", 200
 
+        sender = message["from"]
         text = message["text"]["body"].strip()
 
         handle_message(sender, text)
 
     except Exception as e:
-        print("ERROR:", str(e))
+        print("ERROR:", e)
 
     return "ok", 200
 
@@ -66,13 +66,14 @@ def handle_message(sender, text):
     text_lower = text.lower()
 
     if sender not in users:
+
         users[sender] = {
             "step": "name"
         }
 
         send_message(
             sender,
-            "👋 Welcome to Mandi House\n\nMay I know your name?"
+            "🙏 Namaste!\n\nWelcome to Mandi House ❤️\n\nMay I know your name?"
         )
         return
 
@@ -83,73 +84,42 @@ def handle_message(sender, text):
         user["name"] = text
         user["step"] = "menu"
 
-        send_message(
-            sender,
-            f"""🍽 Welcome {text}
-
-Mandi House Menu
-1. Chicken Mandi - ₹499
-2. Mutton Mandi - ₹699
-3. Fish Mandi - ₹599
-4. Shawarma - ₹120
-
-Reply with item number or item name."""
-        )
+        send_menu(sender, user["name"])
         return
 
     if text_lower in ["hi", "hello", "menu"]:
 
         user["step"] = "menu"
-
-        send_message(
-            sender,
-            f"""🍽 Welcome back {user['name']}
-
-1. Chicken Biryani - ₹250
-2. Mutton Biryani - ₹350
-3. Shawarma - ₹120
-
-Reply with item number or item name."""
-        )
+        send_menu(sender, user["name"])
         return
 
     if user["step"] == "menu":
 
-        selected = None
-
         if text in MENU:
-            selected = MENU[text]
 
-        elif text_lower == "chicken biryani":
-            selected = MENU["1"]
+            item = MENU[text]
 
-        elif text_lower == "mutton biryani":
-            selected = MENU["2"]
-
-        elif text_lower == "fish mandi":
-              selected = MENU["3"]    
-
-        elif text_lower == "shawarma":
-            selected = MENU["4"]
-
-        if selected:
-
-            user["item"] = selected["name"]
-            user["price"] = selected["price"]
+            user["item"] = item["name"]
+            user["price"] = item["price"]
             user["step"] = "quantity"
 
-            send_message(sender, "🍽 How many plates?")
+            send_message(
+                sender,
+                f"🍽 {item['name']} selected.\n\nHow many plates would you like?"
+            )
             return
+
+        send_message(
+            sender,
+            "😄 Please select a valid menu number (1-4)."
+        )
+        return
 
     if user["step"] == "quantity":
 
         if text.isdigit():
 
             qty = int(text)
-
-            if qty <= 0:
-                send_message(sender, "Please enter a valid quantity.")
-                return
 
             subtotal = qty * user["price"]
             gst = round(subtotal * 0.05, 2)
@@ -159,21 +129,29 @@ Reply with item number or item name."""
             user["subtotal"] = subtotal
             user["gst"] = gst
             user["total"] = total
+
             user["step"] = "confirm"
 
             send_message(
                 sender,
-                f"""✅ Order Summary
+                f"""✅ ORDER SUMMARY
 
-{user['item']} x {qty}
+🍽 Item: {user['item']}
+📦 Quantity: {qty}
 
-Subtotal: ₹{subtotal}
-GST (5%): ₹{gst}
-Total Bill: ₹{total}
+💰 Subtotal: ₹{subtotal}
+🧾 GST (5%): ₹{gst}
+💵 Total: ₹{total}
 
-Reply CONFIRM to place order."""
+Reply:
+CONFIRM
+or
+CANCEL"""
             )
             return
+
+        send_message(sender, "Please enter a valid quantity.")
+        return
 
     if user["step"] == "confirm":
 
@@ -183,17 +161,15 @@ Reply CONFIRM to place order."""
 
             send_message(
                 sender,
-                f"""🎉 Order Confirmed
+                f"""🎉 ORDER CONFIRMED
 
-Order ID: {order_id}
+🆔 Order ID: {order_id}
 
-Customer: {user['name']}
-Item: {user['item']}
-Quantity: {user['qty']}
+👤 Customer: {user['name']}
+🍽 Item: {user['item']}
+📦 Quantity: {user['qty']}
 
-Subtotal: ₹{user['subtotal']}
-GST: ₹{user['gst']}
-Total: ₹{user['total']}
+💵 Total: ₹{user['total']}
 
 Thank you for ordering ❤️"""
             )
@@ -201,9 +177,33 @@ Thank you for ordering ❤️"""
             user["step"] = "menu"
             return
 
+        if text_lower == "cancel":
+
+            user["step"] = "menu"
+
+            send_message(
+                sender,
+                "❌ Order cancelled.\n\nType MENU to order again."
+            )
+            return
+
+    send_message(sender, "Type MENU to view menu.")
+
+
+def send_menu(sender, name):
+
     send_message(
         sender,
-        "Send HI to start ordering."
+        f"""🙏 Welcome {name}
+
+🍽 MANDI HOUSE MENU
+
+1️⃣ Chicken Mandi - ₹499
+2️⃣ Mutton Mandi - ₹699
+3️⃣ Fish Mandi - ₹599
+4️⃣ Shawarma - ₹120
+
+Reply with menu number."""
     )
 
 
@@ -216,7 +216,7 @@ def send_message(to, message):
         "Content-Type": "application/json"
     }
 
-    data = {
+    payload = {
         "messaging_product": "whatsapp",
         "to": to,
         "type": "text",
@@ -228,11 +228,11 @@ def send_message(to, message):
     response = requests.post(
         url,
         headers=headers,
-        json=data
+        json=payload
     )
 
     print(response.text)
 
 
 if __name__ == "__main__":
-  app.run(host="0.0.0.0", port=5000)
+    app.run(host="0.0.0.0", port=5000)
