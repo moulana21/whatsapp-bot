@@ -112,7 +112,7 @@ Reply with item number or item name."""
         )
         return
 
-    if user["step"] == "menu":
+    if user["step"] == "quantity":
 
         selected = None
 

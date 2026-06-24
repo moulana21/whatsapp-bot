@@ -95,18 +95,44 @@ def handle_message(sender, text):
 
     if user["step"] == "menu":
 
-        if text in MENU:
+    items = [x.strip() for x in text.split(",")]
 
-            item = MENU[text]
+    valid = True
+    selected_items = []
 
-            user["item"] = item["name"]
-            user["price"] = item["price"]
-            user["step"] = "quantity"
+    for item_no in items:
+        if item_no not in MENU:
+            valid = False
+            break
 
-            send_message(
-                sender,
-                f"🍽 {item['name']} selected.\n\nHow many plates would you like?"
-            )
+        selected_items.append(MENU[item_no])
+
+    if not valid:
+        send_message(
+            sender,
+            "😄 Please select a valid menu number (1-4)."
+        )
+        return
+
+    user["selected_items"] = selected_items
+    user["step"] = "quantity"
+
+    item_names = "\n".join(
+        [f"• {item['name']}" for item in selected_items]
+    )
+
+    send_message(
+        sender,
+        f"""🍽 Selected Items:
+
+{item_names}
+
+How many plates of each item would you like?
+
+Example:
+2"""
+    )
+    return
             return
 
         send_message(
@@ -190,7 +216,7 @@ Thank you for ordering ❤️"""
     send_message(sender, "Type MENU to view menu.")
 
 
-def send_menu(sender, name):
+send_menu(sender, user["name"])
 
     send_message(
         sender,
