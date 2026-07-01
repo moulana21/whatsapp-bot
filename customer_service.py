@@ -18,19 +18,28 @@ def get_customer(phone):
 
 
 def create_customer(phone, name):
+
     conn = get_connection()
     cursor = conn.cursor()
 
     cursor.execute(
         """
-        INSERT INTO customers(phone, name)
-        VALUES(?, ?)
+        INSERT INTO customers(
+            phone,
+            name
+        )
+        VALUES (?, ?)
         """,
         (phone, name)
     )
 
     conn.commit()
+
+    customer_id = cursor.lastrowid
+
     conn.close()
+
+    return customer_id
 
 
 def save_customer(phone, name):
@@ -47,6 +56,42 @@ def save_customer(phone, name):
 
 def customer_exists(phone):
 
-    customer = get_customer(phone)
+    return get_customer(phone) is not None
 
-    return customer is not None
+
+def update_customer_name(phone, name):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        UPDATE customers
+        SET name = ?
+        WHERE phone = ?
+        """,
+        (name, phone)
+    )
+
+    conn.commit()
+    conn.close()
+
+
+def get_all_customers():
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        SELECT *
+        FROM customers
+        ORDER BY id DESC
+        """
+    )
+
+    customers = cursor.fetchall()
+
+    conn.close()
+
+    return customers

@@ -105,3 +105,20 @@ def active_order(customer_id):
     conn.close()
 
     return order
+
+def cancel_order(db_id):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        UPDATE orders
+        SET status='CANCELLED'
+        WHERE id=?
+        """,
+        (db_id,)
+    )
+
+    conn.commit()
+    conn.close()
