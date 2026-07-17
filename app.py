@@ -85,8 +85,27 @@ def webhook():
 
     data = request.get_json()
 
-    print("\n📩 Incoming WhatsApp Message:")
+    print("\n==========================")
+    print("FULL WEBHOOK PAYLOAD")
     print(data)
+    print("==========================")
+
+    try:
+        value = data["entry"][0]["changes"][0]["value"]
+
+        if "messages" in value:
+            msg = value["messages"][0]
+
+            print("✅ USER MESSAGE RECEIVED")
+            print("From :", msg["from"])
+            print("Text :", msg["text"]["body"])
+
+        if "statuses" in value:
+            print("ℹ️ STATUS UPDATE")
+            print(value["statuses"][0]["status"])
+
+    except Exception as e:
+        print("ERROR:", e)
 
     return "OK", 200
 
