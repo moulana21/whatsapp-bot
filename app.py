@@ -1,21 +1,29 @@
-from flask import Flask
+from flask import Flask, request
+import os
 
 from config import HOST, PORT, DEBUG, RESTAURANT_NAME
 from database import init_database
-from customer_service import (
-    get_customer,
-    save_customer,
-    customer_exists
-)
 from menu import get_menu_text
+from restaurant_engine import process_message
 
+# -----------------------------
 # Create Flask App
+# -----------------------------
 app = Flask(__name__)
 
+# -----------------------------
 # Initialize Database
+# -----------------------------
 init_database()
 
+# -----------------------------
+# Verify Token
+# -----------------------------
+VERIFY_TOKEN = os.getenv("VERIFY_TOKEN", "12345")
 
+# -----------------------------
+# Home Route
+# -----------------------------
 @app.route("/")
 def home():
     return {
@@ -24,36 +32,77 @@ def home():
         "database": "Connected"
     }
 
-
-@app.route("/test_customer")
-def test_customer():
-
-    phone = "9999999999"
-
-    if customer_exists(phone):
-
-        customer = get_customer(phone)
-
-        return {
-            "message": "Customer Found",
-            "name": customer["name"]
-        }
-
-    save_customer(phone, "Moulana")
-
-    return {
-        "message": "New Customer Saved"
-    }
-
-
+# -----------------------------
+# Menu Route
+# -----------------------------
 @app.route("/menu")
 def menu():
-
     return {
         "menu": get_menu_text()
     }
 
+# -----------------------------
+# Chat Test Route
+# -----------------------------
+@app.route("/chat")
+def chat():
 
+    phone = request.args.get("phone")
+    message = request.args.get("message")
+
+    if not phone or not message:
+        return {
+            "error": "phone and message required"
+        }, 400
+
+    reply = process_message(phone, message)
+
+    return {
+        "reply": reply
+    }
+
+# -----------------------------
+# WhatsApp Webhook Verification
+# -----------------------------
+@app.route("/webhook", methods=["GET"])
+def verify():
+
+    mode = request.args.get("hub.mode")
+    token = request.args.get("hub.verify_token")
+    challenge = request.args.get("hub.challenge")
+
+    if mode == "subscribe" and token == VERIFY_TOKEN:
+        print("✅ Webhook Verified")
+        return challenge, 200
+
+    return "Verification failed", 403
+
+# -----------------------------
+# WhatsApp Incoming Messages
+# -----------------------------
+@app.route("/webhook", methods=["POST"])
+def webhook():
+
+    data = request.get_json()
+
+    print("\n📩 Incoming WhatsApp Message:")
+    print(data)
+
+    return "OK", 200
+
+# -----------------------------
+# Print Routes
+# -----------------------------
+print("\n========== REGISTERED ROUTES ==========")
+
+for rule in app.url_map.iter_rules():
+    print(rule)
+
+print("=======================================\n")
+
+# -----------------------------
+# Start Server
+# -----------------------------
 if __name__ == "__main__":
 
     print("🚀 Starting Restaurant Bot V3...")
