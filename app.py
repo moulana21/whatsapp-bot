@@ -1,4 +1,5 @@
 from flask import Flask, request
+from whatsapp_api import send_message
 import os
 
 from config import HOST, PORT, DEBUG, RESTAURANT_NAME
@@ -93,19 +94,32 @@ def webhook():
     try:
         value = data["entry"][0]["changes"][0]["value"]
 
+        # Incoming User Message
         if "messages" in value:
+
             msg = value["messages"][0]
 
-            print("✅ USER MESSAGE RECEIVED")
-            print("From :", msg["from"])
-            print("Text :", msg["text"]["body"])
+            sender = msg["from"]
+            text = msg["text"]["body"]
 
+            print("✅ USER MESSAGE RECEIVED")
+            print("From :", sender)
+            print("Text :", text)
+
+            # Process message
+            reply = process_message(sender, text)
+
+            # Send WhatsApp reply
+            send_message(sender, reply)
+
+        # Status Updates
         if "statuses" in value:
+
             print("ℹ️ STATUS UPDATE")
             print(value["statuses"][0]["status"])
 
     except Exception as e:
-        print("ERROR:", e)
+        print("❌ ERROR:", e)
 
     return "OK", 200
 
