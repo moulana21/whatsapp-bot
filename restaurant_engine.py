@@ -96,62 +96,61 @@ def process_message(phone, message):
     # ------------------------------------
     # Main Menu
     # ------------------------------------
-  if session["step"] == "MAIN_MENU":
+    if session["step"] == "MAIN_MENU":
 
-    if message == "1":
-        session["step"] = "VIEW_MENU"
-        return get_menu_text()
+        if message == "1":
+            session["step"] = "VIEW_MENU"
+            return get_menu_text()
 
-    elif message == "2":
-        return "🛒 Current Order feature is coming next."
+        elif message == "2":
+            return "🛒 Current Order feature is coming next."
 
-    elif message == "3":
-        return "👨‍🍳 Waiter has been notified. (Coming soon)"
+        elif message == "3":
+            return "👨‍🍳 Waiter has been notified. (Coming soon)"
 
-    elif message == "4":
-        return "🧾 Request Bill feature coming next."
+        elif message == "4":
+            return "🧾 Request Bill feature coming next."
 
-    elif message == "5":
-        return (
-            "🕒 Restaurant Timings\n"
-            "11:00 AM - 11:00 PM"
-        )
-
-    else:
-        return "Please choose a valid option (1-5)."
-
-
-# ------------------------------------
-# View Menu
-# ------------------------------------
-if session["step"] == "VIEW_MENU":
-
-    item_numbers = [item.strip() for item in message.split(",")]
-
-    selected_items = []
-
-    for item_no in item_numbers:
-
-        item = get_item(item_no)
-
-        if item:
-            selected_items.append(item)
-        else:
+        elif message == "5":
             return (
-                f"❌ Invalid menu item: {item_no}\n\n"
-                "Please select valid menu numbers."
+                "🕒 Restaurant Timings\n"
+                "11:00 AM - 11:00 PM"
             )
 
-    session["selected_items"] = selected_items
-    session["current_item_index"] = 0
-    session["step"] = "ASK_QUANTITY"
+        else:
+            return "Please choose a valid option (1-5)."
 
-    first_item = selected_items[0]
+    # ------------------------------------
+    # View Menu
+    # ------------------------------------
+    if session["step"] == "VIEW_MENU":
 
-    return (
-        f"✅ You selected:\n\n"
-        f"{', '.join(item['name'] for item in selected_items)}\n\n"
-        f"How many {first_item['name']}?"
-    )
+        item_numbers = [item.strip() for item in message.split(",")]
 
-return "Something went wrong."
+        selected_items = []
+
+        for item_no in item_numbers:
+
+            item = get_item(item_no)
+
+            if item:
+                selected_items.append(item)
+            else:
+                return (
+                    f"❌ Invalid menu item: {item_no}\n\n"
+                    "Please select valid menu numbers."
+                )
+
+        session["selected_items"] = selected_items
+        session["current_item_index"] = 0
+        session["step"] = "ASK_QUANTITY"
+
+        first_item = selected_items[0]
+
+        return (
+            f"✅ You selected:\n\n"
+            f"{', '.join(item['name'] for item in selected_items)}\n\n"
+            f"How many {first_item['name']}?"
+        )
+
+    return "Something went wrong."
