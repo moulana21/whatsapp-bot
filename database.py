@@ -26,7 +26,19 @@ def init_database():
 
         name TEXT NOT NULL,
 
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        first_visit TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+        last_visit TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+        total_orders INTEGER DEFAULT 0,
+
+        total_spent REAL DEFAULT 0,
+
+        favorite_item TEXT,
+
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 
     )
     """)
