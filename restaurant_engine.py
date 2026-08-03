@@ -63,7 +63,7 @@ def process_message(phone, message):
             SESSIONS[phone]["customer_name"] = customer["name"]
             SESSIONS[phone]["step"] = "MAIN_MENU"
 
-            return main_menu(message, session["table"])
+            return "SHOW_MENU_BUTTON"
 
         return (
             f"🙏 Welcome to Mandi House!\n\n"
@@ -91,7 +91,7 @@ def process_message(phone, message):
         session["customer_name"] = message
         session["step"] = "MAIN_MENU"
 
-        return main_menu(message, session["table"])
+         return "SHOW_MENU_BUTTON"
 
     # ------------------------------------
     # Main Menu

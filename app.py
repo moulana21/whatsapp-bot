@@ -97,7 +97,9 @@ def webhook():
     try:
         value = data["entry"][0]["changes"][0]["value"]
 
+        # -----------------------------
         # Incoming User Message
+        # -----------------------------
         if "messages" in value:
 
             msg = value["messages"][0]
@@ -108,17 +110,19 @@ def webhook():
             print("✅ USER MESSAGE RECEIVED")
             print("From :", sender)
             print("Text :", text)
-           # Process message
+
+            # Process message
             reply = process_message(sender, text)
 
-           # Send WhatsApp reply
+            # Send WhatsApp reply
+            if reply == "SHOW_MENU_BUTTON":
+                send_reply_buttons(sender)
+            else:
+                send_message(sender, reply)
 
-        if reply == "SHOW_MENU_BUTTON":
-           send_reply_buttons(sender)
-        else:
-          send_message(sender, reply)
-
+        # -----------------------------
         # Status Updates
+        # -----------------------------
         if "statuses" in value:
 
             print("ℹ️ STATUS UPDATE")
@@ -128,6 +132,7 @@ def webhook():
         print("❌ ERROR:", e)
 
     return "OK", 200
+
 
 # -----------------------------
 # Print Routes
