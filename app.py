@@ -105,23 +105,28 @@ def webhook():
             msg = value["messages"][0]
 
             sender = msg["from"]
-              # Get normal text or button reply
-        if "text" in msg:
-          text = msg["text"]["body"]
 
-        elif "interactive" in msg:
-              text = msg["interactive"]["button_reply"]["id"]
+            # Get normal text or button reply
+            if "text" in msg:
+                text = msg["text"]["body"]
 
-        else:
-              return "OK", 200
+            elif "interactive" in msg:
+                text = msg["interactive"]["button_reply"]["id"]
+
+            else:
+                return "OK", 200
+
+            print("✅ USER MESSAGE RECEIVED")
+            print("From :", sender)
+            print("Text :", text)
 
             # Process message
-        reply = process_message(sender, text)
+            reply = process_message(sender, text)
 
             # Send WhatsApp reply
-        if reply == "SHOW_MENU_BUTTON":
+            if reply == "SHOW_MENU_BUTTON":
                 send_reply_buttons(sender)
-        else:
+            else:
                 send_message(sender, reply)
 
         # -----------------------------
@@ -136,27 +141,3 @@ def webhook():
         print("❌ ERROR:", e)
 
     return "OK", 200
-
-
-# -----------------------------
-# Print Routes
-# -----------------------------
-print("\n========== REGISTERED ROUTES ==========")
-
-for rule in app.url_map.iter_rules():
-    print(rule)
-
-print("=======================================\n")
-
-# -----------------------------
-# Start Server
-# -----------------------------
-if __name__ == "__main__":
-
-    print("🚀 Starting Restaurant Bot V3...")
-
-    app.run(
-        host=HOST,
-        port=PORT,
-        debug=DEBUG
-    )
