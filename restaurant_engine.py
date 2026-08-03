@@ -98,7 +98,7 @@ def process_message(phone, message):
     # ------------------------------------
     if session["step"] == "MAIN_MENU":
 
-        if message == "1":
+        if message == "1" or message == "VIEW_MENU":
             session["step"] = "VIEW_MENU"
             return get_menu_text()
 

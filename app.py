@@ -105,19 +105,23 @@ def webhook():
             msg = value["messages"][0]
 
             sender = msg["from"]
-            text = msg["text"]["body"]
+              # Get normal text or button reply
+        if "text" in msg:
+          text = msg["text"]["body"]
 
-            print("✅ USER MESSAGE RECEIVED")
-            print("From :", sender)
-            print("Text :", text)
+        elif "interactive" in msg:
+              text = msg["interactive"]["button_reply"]["id"]
+
+        else:
+              return "OK", 200
 
             # Process message
-            reply = process_message(sender, text)
+        reply = process_message(sender, text)
 
             # Send WhatsApp reply
-            if reply == "SHOW_MENU_BUTTON":
+        if reply == "SHOW_MENU_BUTTON":
                 send_reply_buttons(sender)
-            else:
+        else:
                 send_message(sender, reply)
 
         # -----------------------------
