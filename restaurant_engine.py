@@ -91,7 +91,7 @@ def process_message(phone, message):
         session["customer_name"] = message
         session["step"] = "MAIN_MENU"
 
-         return "SHOW_MENU_BUTTON"
+    return "SHOW_MENU_BUTTON"
 
     # ------------------------------------
     # Main Menu
