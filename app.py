@@ -1,5 +1,8 @@
 from flask import Flask, request
-from whatsapp_api import send_message
+from whatsapp_api import (
+    send_message,
+    send_reply_buttons
+)
 import os
 
 from config import HOST, PORT, DEBUG, RESTAURANT_NAME
@@ -105,12 +108,15 @@ def webhook():
             print("✅ USER MESSAGE RECEIVED")
             print("From :", sender)
             print("Text :", text)
-
-            # Process message
+           # Process message
             reply = process_message(sender, text)
 
-            # Send WhatsApp reply
-            send_message(sender, reply)
+           # Send WhatsApp reply
+
+        if reply == "SHOW_MENU_BUTTON":
+           send_reply_buttons(sender)
+        else:
+          send_message(sender, reply)
 
         # Status Updates
         if "statuses" in value:

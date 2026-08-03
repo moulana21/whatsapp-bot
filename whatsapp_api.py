@@ -37,3 +37,55 @@ def send_message(to, message):
     print(response.text)
 
     return response.status_code == 200
+    # =====================================
+# SEND REPLY BUTTONS
+# =====================================
+
+def send_reply_buttons(to):
+
+    url = f"https://graph.facebook.com/v25.0/{PHONE_NUMBER_ID}/messages"
+
+    headers = {
+        "Authorization": f"Bearer {WHATSAPP_TOKEN}",
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        "messaging_product": "whatsapp",
+        "to": to,
+        "type": "interactive",
+        "interactive": {
+            "type": "button",
+
+            "body": {
+                "text": "🙏 Welcome to Mandi House ❤️\n\nTap below to view our menu."
+            },
+
+            "action": {
+                "buttons": [
+
+                    {
+                        "type": "reply",
+
+                        "reply": {
+                            "id": "VIEW_MENU",
+                            "title": "🍽 View Menu"
+                        }
+                    }
+
+                ]
+            }
+        }
+    }
+
+    response = requests.post(
+        url,
+        headers=headers,
+        json=payload
+    )
+
+    print("📤 SEND BUTTON RESPONSE")
+    print(response.status_code)
+    print(response.text)
+
+    return response.status_code == 200
