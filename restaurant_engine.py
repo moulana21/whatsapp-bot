@@ -8,24 +8,9 @@ from menu import (
     get_menu_text,
     get_item
 )
+
 # Temporary session storage
 SESSIONS = {}
-
-
-def main_menu(name, table):
-    return f"""
-🙏 Welcome {name} ❤️
-
-📍 Table: {table}
-
-Please choose an option:
-
-1️⃣ View Menu
-2️⃣ Current Order
-3️⃣ Call Waiter
-4️⃣ Request Bill
-5️⃣ Restaurant Timings
-"""
 
 
 def process_message(phone, message):
@@ -33,7 +18,7 @@ def process_message(phone, message):
     message = message.strip()
 
     # ------------------------------------
-    # Detect table QR (Example: T5)
+    # Detect Table QR
     # ------------------------------------
     if message.upper().startswith("T"):
 
@@ -41,17 +26,11 @@ def process_message(phone, message):
 
         SESSIONS[phone] = {
             "step": "ASK_NAME",
-
-            # Customer
             "table": table,
             "customer_name": None,
-
-            # Ordering
             "selected_items": [],
             "current_item_index": 0,
             "cart": [],
-
-            # Order
             "current_order_id": None,
             "order_status": "NEW"
         }
@@ -72,12 +51,10 @@ def process_message(phone, message):
         )
 
     # ------------------------------------
-    # Session not found
+    # No Session
     # ------------------------------------
     if phone not in SESSIONS:
-        return (
-            "Please scan the QR code on your table to start ordering."
-        )
+        return "Please scan the QR code on your table to start ordering."
 
     session = SESSIONS[phone]
 
@@ -91,7 +68,7 @@ def process_message(phone, message):
         session["customer_name"] = message
         session["step"] = "MAIN_MENU"
 
-    return "SHOW_MENU_BUTTON"
+        return "SHOW_MENU_BUTTON"
 
     # ------------------------------------
     # Main Menu
@@ -99,6 +76,7 @@ def process_message(phone, message):
     if session["step"] == "MAIN_MENU":
 
         if message == "1" or message == "VIEW_MENU":
+
             session["step"] = "VIEW_MENU"
             return get_menu_text()
 
@@ -106,7 +84,7 @@ def process_message(phone, message):
             return "🛒 Current Order feature is coming next."
 
         elif message == "3":
-            return "👨‍🍳 Waiter has been notified. (Coming soon)"
+            return "👨‍🍳 Waiter has been notified."
 
         elif message == "4":
             return "🧾 Request Bill feature coming next."
@@ -118,14 +96,14 @@ def process_message(phone, message):
             )
 
         else:
-            return "Please choose a valid option (1-5)."
+            return "Please choose a valid option."
 
     # ------------------------------------
     # View Menu
     # ------------------------------------
     if session["step"] == "VIEW_MENU":
 
-        item_numbers = [item.strip() for item in message.split(",")]
+        item_numbers = [x.strip() for x in message.split(",")]
 
         selected_items = []
 
@@ -136,10 +114,7 @@ def process_message(phone, message):
             if item:
                 selected_items.append(item)
             else:
-                return (
-                    f"❌ Invalid menu item: {item_no}\n\n"
-                    "Please select valid menu numbers."
-                )
+                return f"❌ Invalid menu item: {item_no}"
 
         session["selected_items"] = selected_items
         session["current_item_index"] = 0
@@ -148,9 +123,16 @@ def process_message(phone, message):
         first_item = selected_items[0]
 
         return (
-            f"✅ You selected:\n\n"
-            f"{', '.join(item['name'] for item in selected_items)}\n\n"
-            f"How many {first_item['name']}?"
+            "✅ You selected:\n\n"
+            + ", ".join(item["name"] for item in selected_items)
+            + f"\n\nHow many {first_item['name']}?"
         )
+
+    # ------------------------------------
+    # Ask Quantity
+    # ------------------------------------
+    if session["step"] == "ASK_QUANTITY":
+
+        return "Quantity feature coming next."
 
     return "Something went wrong."
