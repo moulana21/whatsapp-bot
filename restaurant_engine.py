@@ -52,32 +52,32 @@ def process_message(phone, message):
         # =================================
 
         if customer_exists(phone):
-             customer = get_customer(phone)
+         customer = get_customer(phone)
+ 
+         print("========== CUSTOMER RECOGNITION ==========")
+        print("PHONE:", phone)
+        print("CUSTOMER EXISTS: True")
+        print("CUSTOMER NAME:", customer["name"])
+        print("==========================================")
 
-             print("========== CUSTOMER RECOGNITION ==========")
-             print("PHONE:", phone)
-             print("CUSTOMER EXISTS: True")
-             print("CUSTOMER NAME:", customer["name"])
-             print("==========================================")
+    SESSIONS[phone]["customer_name"] = customer["name"]
+    SESSIONS[phone]["step"] = "MAIN_MENU"
 
-             SESSIONS[phone]["customer_name"] = customer["name"]
-             SESSIONS[phone]["step"] = "MAIN_MENU"
-             return "SHOW_RETURNING_MENU_BUTTON"
-
-             SESSIONS[phone]["customer_name"] = customer["name"]
-             SESSIONS[phone]["step"] = "MAIN_MENU"
-
-             return "SHOW_RETURNING_MENU_BUTTON"
-
+    return "SHOW_RETURNING_MENU_BUTTON"
+    else:
+    print("========== CUSTOMER RECOGNITION ==========")
+    print("PHONE:", phone)
+    print("CUSTOMER EXISTS: False")
+    print("==========================================")
         # =================================
         # NEW CUSTOMER
         # =================================
 
-        return (
-            f"🙏 Welcome to Mandi House!\n\n"
+    return (
+         f"🙏 Welcome to Mandi House!\n\n"
             f"📍 Table: {table}\n\n"
             "May I know your name?"
-        )
+        ) 
 
     # =====================================
     # SESSION NOT FOUND
