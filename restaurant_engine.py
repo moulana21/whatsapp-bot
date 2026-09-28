@@ -9,7 +9,11 @@ from menu import (
     get_item
 )
 
-# Temporary session storage
+
+# =====================================
+# TEMPORARY SESSION STORAGE
+# =====================================
+
 SESSIONS = {}
 
 
@@ -17,32 +21,57 @@ def process_message(phone, message):
 
     message = message.strip()
 
-    # ------------------------------------
-    # Detect Table QR
-    # ------------------------------------
+    # =====================================
+    # DETECT TABLE QR
+    # Example: T5
+    # =====================================
+
     if message.upper().startswith("T"):
 
         table = message.upper()
 
         SESSIONS[phone] = {
             "step": "ASK_NAME",
+
+            # Customer
             "table": table,
             "customer_name": None,
+
+            # Ordering
             "selected_items": [],
             "current_item_index": 0,
             "cart": [],
+
+            # Order
             "current_order_id": None,
             "order_status": "NEW"
         }
 
+        # =================================
+        # EXISTING CUSTOMER
+        # =================================
+
         if customer_exists(phone):
+             customer = get_customer(phone)
 
-            customer = get_customer(phone)
+             print("========== CUSTOMER RECOGNITION ==========")
+             print("PHONE:", phone)
+             print("CUSTOMER EXISTS: True")
+             print("CUSTOMER NAME:", customer["name"])
+             print("==========================================")
 
-            SESSIONS[phone]["customer_name"] = customer["name"]
-            SESSIONS[phone]["step"] = "MAIN_MENU"
+             SESSIONS[phone]["customer_name"] = customer["name"]
+             SESSIONS[phone]["step"] = "MAIN_MENU"
+             return "SHOW_RETURNING_MENU_BUTTON"
 
-            return "SHOW_MENU_BUTTON"
+             SESSIONS[phone]["customer_name"] = customer["name"]
+             SESSIONS[phone]["step"] = "MAIN_MENU"
+
+             return "SHOW_RETURNING_MENU_BUTTON"
+
+        # =================================
+        # NEW CUSTOMER
+        # =================================
 
         return (
             f"🙏 Welcome to Mandi House!\n\n"
@@ -50,17 +79,23 @@ def process_message(phone, message):
             "May I know your name?"
         )
 
-    # ------------------------------------
-    # No Session
-    # ------------------------------------
+    # =====================================
+    # SESSION NOT FOUND
+    # =====================================
+
     if phone not in SESSIONS:
-        return "Please scan the QR code on your table to start ordering."
+
+        return (
+            "Please scan the QR code on your table "
+            "to start ordering."
+        )
 
     session = SESSIONS[phone]
 
-    # ------------------------------------
-    # Ask Name
-    # ------------------------------------
+    # =====================================
+    # ASK CUSTOMER NAME
+    # =====================================
+
     if session["step"] == "ASK_NAME":
 
         save_customer(phone, message)
@@ -70,69 +105,203 @@ def process_message(phone, message):
 
         return "SHOW_MENU_BUTTON"
 
-    # ------------------------------------
-    # Main Menu
-    # ------------------------------------
+    # =====================================
+       # MAIN MENU
+       # =====================================
     if session["step"] == "MAIN_MENU":
+   
+       # Customer tapped View Menu
+       if message == "VIEW_MENU":
+   
+           session["step"] = "CATEGORY"
+   
+           return "SHOW_CATEGORY_BUTTONS"
+   
+           # Keep typing 1 working temporarily
+           if message == "1":
+   
+               session["step"] = "CATEGORY"
+   
+               return "SHOW_CATEGORY_BUTTONS"
+   
+           return "Please use the button above."
 
-        if message == "1" or message == "VIEW_MENU":
+    # =====================================
+    # CATEGORY SELECTION
+    # =====================================
 
-            session["step"] = "VIEW_MENU"
-            return get_menu_text()
+    if session["step"] == "CATEGORY":
 
-        elif message == "2":
-            return "🛒 Current Order feature is coming next."
+        if message == "CATEGORY_MANDI":
 
-        elif message == "3":
-            return "👨‍🍳 Waiter has been notified."
+            session["step"] = "MANDI_MENU"
 
-        elif message == "4":
-            return "🧾 Request Bill feature coming next."
+            return "SHOW_MANDI_MENU"
 
-        elif message == "5":
-            return (
-                "🕒 Restaurant Timings\n"
-                "11:00 AM - 11:00 PM"
-            )
+        elif message == "CATEGORY_SHAWARMA":
+
+            session["step"] = "SHAWARMA_MENU"
+
+            return "SHOW_SHAWARMA_MENU"
+
+        elif message == "CATEGORY_DRINKS":
+
+            session["step"] = "DRINKS_MENU"
+
+            return "SHOW_DRINKS_MENU"
 
         else:
-            return "Please choose a valid option."
 
-    # ------------------------------------
-    # View Menu
-    # ------------------------------------
-    if session["step"] == "VIEW_MENU":
+            return "Please choose a category."
 
-        item_numbers = [x.strip() for x in message.split(",")]
+    # =====================================
+    # MANDI MENU
+    # =====================================
 
-        selected_items = []
+    if session["step"] == "MANDI_MENU":
 
-        for item_no in item_numbers:
+        # Current menu numbering:
+        # 1 = Chicken Mandi
+        # 2 = Mutton Mandi
+        # 3 = Fish Mandi
 
-            item = get_item(item_no)
+        item_numbers = ["1", "2", "3"]
 
-            if item:
-                selected_items.append(item)
-            else:
-                return f"❌ Invalid menu item: {item_no}"
+        if message in item_numbers:
 
-        session["selected_items"] = selected_items
-        session["current_item_index"] = 0
-        session["step"] = "ASK_QUANTITY"
+            item = get_item(message)
 
-        first_item = selected_items[0]
+            if not item:
 
-        return (
-            "✅ You selected:\n\n"
-            + ", ".join(item["name"] for item in selected_items)
-            + f"\n\nHow many {first_item['name']}?"
-        )
+                return "❌ Menu item not found."
 
-    # ------------------------------------
-    # Ask Quantity
-    # ------------------------------------
+            session["selected_items"] = [item]
+            session["current_item_index"] = 0
+            session["step"] = "ASK_QUANTITY"
+
+            return (
+                f"✅ You selected:\n\n"
+                f"{item['name']}\n\n"
+                f"How many {item['name']}?"
+            )
+
+        return "Please choose a Mandi item."
+
+    # =====================================
+    # SHAWARMA MENU
+    # =====================================
+
+    if session["step"] == "SHAWARMA_MENU":
+
+        # Current menu numbering:
+        # 4 = Shawarma
+
+        if message == "4":
+
+            item = get_item("4")
+
+            if not item:
+
+                return "❌ Menu item not found."
+
+            session["selected_items"] = [item]
+            session["current_item_index"] = 0
+            session["step"] = "ASK_QUANTITY"
+
+            return (
+                f"✅ You selected:\n\n"
+                f"{item['name']}\n\n"
+                f"How many {item['name']}?"
+            )
+
+        return "Please choose Shawarma."
+
+    # =====================================
+    # DRINKS MENU
+    # =====================================
+
+    if session["step"] == "DRINKS_MENU":
+
+        # Current menu numbering:
+        # 5 = Water
+        # 6 = Coke
+        # 7 = Pepsi
+
+        if message in ["5", "6", "7"]:
+
+            item = get_item(message)
+
+            if not item:
+
+                return "❌ Menu item not found."
+
+            session["selected_items"] = [item]
+            session["current_item_index"] = 0
+            session["step"] = "ASK_QUANTITY"
+
+            return (
+                f"✅ You selected:\n\n"
+                f"{item['name']}\n\n"
+                f"How many {item['name']}?"
+            )
+
+        return "Please choose a drink."
+
+    # =====================================
+    # ASK QUANTITY
+    # =====================================
+
     if session["step"] == "ASK_QUANTITY":
 
-        return "Quantity feature coming next."
+        if message.isdigit():
 
-    return "Something went wrong."
+            quantity = int(message)
+
+            if quantity <= 0:
+
+                return "Please enter a valid quantity."
+
+            item = session["selected_items"][0]
+
+            session["cart"].append({
+                "name": item["name"],
+                "price": item["price"],
+                "quantity": quantity
+            })
+
+            session["step"] = "AFTER_ADD"
+
+            return (
+                "✅ Added to your order!\n\n"
+                f"{item['name']} × {quantity}"
+            )
+
+        return "Please enter a valid quantity."
+
+    # =====================================
+    # AFTER ADDING ITEM
+    # =====================================
+
+    if session["step"] == "AFTER_ADD":
+
+        if message == "ADD_MORE":
+
+            session["step"] = "CATEGORY"
+
+            return "SHOW_CATEGORY_BUTTONS"
+
+        elif message == "VIEW_CART":
+
+            return "SHOW_CART"
+
+        elif message == "REQUEST_BILL":
+
+            return "SHOW_BILL"
+
+        return "Please choose an option."
+
+    # =====================================
+    # FALLBACK
+    # =====================================
+
+    return "Something went wrong. Please try again."
