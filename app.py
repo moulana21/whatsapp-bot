@@ -1,53 +1,82 @@
 from flask import Flask, request
-from whatsapp_api import (
-    send_message,
-    send_reply_buttons
-)
 import os
 
-from config import HOST, PORT, DEBUG, RESTAURANT_NAME
+from whatsapp_api import (
+    send_message,
+    send_reply_buttons,
+    send_category_buttons
+)
+
+from config import (
+    HOST,
+    PORT,
+    DEBUG,
+    RESTAURANT_NAME
+)
+
 from database import init_database
 from menu import get_menu_text
-from restaurant_engine import process_message
 
-# -----------------------------
-# Create Flask App
-# -----------------------------
+from restaurant_engine import (
+    process_message,
+    SESSIONS
+)
+
+
+# =====================================
+# CREATE FLASK APP
+# =====================================
+
 app = Flask(__name__)
 
-# -----------------------------
-# Initialize Database
-# -----------------------------
+
+# =====================================
+# INITIALIZE DATABASE
+# =====================================
+
 init_database()
 
-# -----------------------------
-# Verify Token
-# -----------------------------
-VERIFY_TOKEN = os.getenv("VERIFY_TOKEN", "12345")
 
-# -----------------------------
-# Home Route
-# -----------------------------
+# =====================================
+# VERIFY TOKEN
+# =====================================
+
+VERIFY_TOKEN = os.getenv(
+    "VERIFY_TOKEN",
+    "12345"
+)
+
+
+# =====================================
+# HOME ROUTE
+# =====================================
+
 @app.route("/")
 def home():
+
     return {
         "status": "running",
         "project": f"{RESTAURANT_NAME} Restaurant Bot V3",
         "database": "Connected"
     }
 
-# -----------------------------
-# Menu Route
-# -----------------------------
+
+# =====================================
+# MENU ROUTE
+# =====================================
+
 @app.route("/menu")
 def menu():
+
     return {
         "menu": get_menu_text()
     }
 
-# -----------------------------
-# Chat Test Route
-# -----------------------------
+
+# =====================================
+# CHAT TEST ROUTE
+# =====================================
+
 @app.route("/chat")
 def chat():
 
@@ -55,36 +84,63 @@ def chat():
     message = request.args.get("message")
 
     if not phone or not message:
+
         return {
             "error": "phone and message required"
         }, 400
 
-    reply = process_message(phone, message)
+    reply = process_message(
+        phone,
+        message
+    )
 
     return {
         "reply": reply
     }
 
-# -----------------------------
-# WhatsApp Webhook Verification
-# -----------------------------
-@app.route("/webhook", methods=["GET"])
+
+# =====================================
+# WHATSAPP WEBHOOK VERIFICATION
+# =====================================
+
+@app.route(
+    "/webhook",
+    methods=["GET"]
+)
 def verify():
 
-    mode = request.args.get("hub.mode")
-    token = request.args.get("hub.verify_token")
-    challenge = request.args.get("hub.challenge")
+    mode = request.args.get(
+        "hub.mode"
+    )
 
-    if mode == "subscribe" and token == VERIFY_TOKEN:
+    token = request.args.get(
+        "hub.verify_token"
+    )
+
+    challenge = request.args.get(
+        "hub.challenge"
+    )
+
+    if (
+        mode == "subscribe"
+        and token == VERIFY_TOKEN
+    ):
+
         print("✅ Webhook Verified")
+
         return challenge, 200
 
     return "Verification failed", 403
 
-# -----------------------------
-# WhatsApp Incoming Messages
-# -----------------------------
-@app.route("/webhook", methods=["POST"])
+
+# =====================================
+# WHATSAPP INCOMING MESSAGES
+# =====================================
+
+@app.route(
+    "/webhook",
+    methods=["POST"]
+)
 def webhook():
 
     data = request.get_json()
@@ -95,49 +151,212 @@ def webhook():
     print("==========================")
 
     try:
-        value = data["entry"][0]["changes"][0]["value"]
 
-        # -----------------------------
-        # Incoming User Message
-        # -----------------------------
+        value = data[
+            "entry"
+        ][0][
+            "changes"
+        ][0][
+            "value"
+        ]
+
+        # =================================
+        # INCOMING MESSAGE
+        # =================================
+
         if "messages" in value:
 
-            msg = value["messages"][0]
+            msg = value[
+                "messages"
+            ][0]
 
             sender = msg["from"]
 
-            # Get normal text or button reply
+            # -----------------------------
+            # NORMAL TEXT MESSAGE
+            # -----------------------------
+
             if "text" in msg:
-                text = msg["text"]["body"]
+
+                text = msg[
+                    "text"
+                ]["body"]
+
+            # -----------------------------
+            # INTERACTIVE BUTTON
+            # -----------------------------
 
             elif "interactive" in msg:
-                text = msg["interactive"]["button_reply"]["id"]
+
+                interactive = msg[
+                    "interactive"
+                ]
+
+                if (
+                    interactive.get("type")
+                    == "button_reply"
+                ):
+
+                    text = interactive[
+                        "button_reply"
+                    ]["id"]
+
+                else:
+
+                    return "OK", 200
+
+            # -----------------------------
+            # UNSUPPORTED MESSAGE
+            # -----------------------------
 
             else:
+
                 return "OK", 200
 
-            print("✅ USER MESSAGE RECEIVED")
-            print("From :", sender)
-            print("Text :", text)
+            print(
+                "✅ USER MESSAGE RECEIVED"
+            )
 
-            # Process message
-            reply = process_message(sender, text)
+            print(
+                "From :",
+                sender
+            )
 
-            # Send WhatsApp reply
-            if reply == "SHOW_MENU_BUTTON":
-                send_reply_buttons(sender)
+            print(
+                "Text :",
+                text
+            )
+
+            # =================================
+            # PROCESS MESSAGE
+            # =================================
+
+            reply = process_message(
+                sender,
+                text
+            )
+
+            print(
+                "🤖 BOT REPLY :",
+                reply
+            )
+
+            # =================================
+            # GET CUSTOMER SESSION
+            # =================================
+
+            session = SESSIONS.get(
+                sender
+            )
+
+            # =================================
+            # SHOW CUSTOMER WELCOME BUTTON
+            # =================================
+
+            if reply in ["SHOW_MENU_BUTTON", "SHOW_RETURNING_MENU_BUTTON"]:
+
+                if not session:
+
+                    send_message(
+                        sender,
+                        "Please scan the QR code again."
+                    )
+
+                    return "OK", 200
+
+                customer_name = session.get(
+                    "customer_name",
+                    "Guest"
+                )
+
+                table = session.get(
+                    "table",
+                    "Unknown"
+                )
+
+                send_reply_buttons(
+                  sender,
+                  customer_name,
+                   table,
+                  returning=(reply == "SHOW_RETURNING_MENU_BUTTON")
+)
+
+            # =================================
+            # SHOW CATEGORY BUTTONS
+            # =================================
+
+            elif reply == "SHOW_CATEGORY_BUTTONS":
+
+                send_category_buttons(
+                    sender
+                )
+
+            # =================================
+            # NORMAL TEXT REPLY
+            # =================================
+
             else:
-                send_message(sender, reply)
 
-        # -----------------------------
-        # Status Updates
-        # -----------------------------
+                send_message(
+                    sender,
+                    reply
+                )
+
+        # =================================
+        # STATUS UPDATE
+        # =================================
+
         if "statuses" in value:
 
-            print("ℹ️ STATUS UPDATE")
-            print(value["statuses"][0]["status"])
+            print(
+                "ℹ️ STATUS UPDATE"
+            )
+
+            print(
+                value[
+                    "statuses"
+                ][0]["status"]
+            )
 
     except Exception as e:
-        print("❌ ERROR:", e)
+
+        print(
+            "❌ ERROR:",
+            e
+        )
 
     return "OK", 200
+
+
+# =====================================
+# PRINT REGISTERED ROUTES
+# =====================================
+
+print(
+    "\n========== REGISTERED ROUTES =========="
+)
+
+for rule in app.url_map.iter_rules():
+
+    print(rule)
+
+print(
+    "=======================================\n"
+)
+
+
+# =====================================
+# START SERVER
+# =====================================
+
+if __name__ == "__main__":
+
+    print(
+        "🚀 Starting Restaurant Bot V3..."
+    )
+
+    app.run(
+        host=HOST,
+        port=PORT,
+        debug=DEBUG
+    )

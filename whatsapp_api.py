@@ -1,16 +1,17 @@
 import os
 import requests
 
+
 WHATSAPP_TOKEN = os.getenv("WHATSAPP_TOKEN")
 PHONE_NUMBER_ID = os.getenv("PHONE_NUMBER_ID")
+
+GRAPH_URL = f"https://graph.facebook.com/v25.0/{PHONE_NUMBER_ID}/messages"
 
 
 def send_message(to, message):
     """
-    Send a text message through WhatsApp Cloud API
+    Send a normal text message through WhatsApp Cloud API.
     """
-
-    url = f"https://graph.facebook.com/v25.0/{PHONE_NUMBER_ID}/messages"
 
     headers = {
         "Authorization": f"Bearer {WHATSAPP_TOKEN}",
@@ -27,7 +28,7 @@ def send_message(to, message):
     }
 
     response = requests.post(
-        url,
+        GRAPH_URL,
         headers=headers,
         json=payload
     )
@@ -37,13 +38,69 @@ def send_message(to, message):
     print(response.text)
 
     return response.status_code == 200
-    # =====================================
-# SEND REPLY BUTTONS
+
+
+# =====================================
+# FIRST BUTTON
 # =====================================
 
-def send_reply_buttons(to):
+def send_reply_buttons(to, customer_name, table, returning=False):
 
-    url = f"https://graph.facebook.com/v25.0/{PHONE_NUMBER_ID}/messages"
+    headers = {
+        "Authorization": f"Bearer {WHATSAPP_TOKEN}",
+        "Content-Type": "application/json"
+    }
+
+    if returning:
+        body_text = (
+            f"👋 Welcome back, {customer_name}!\n\n"
+            f"📍 Table: {table}\n\n"
+            "Ready to order?"
+        )
+    else:
+        body_text = (
+            f"👋 Welcome, {customer_name}!\n\n"
+            f"📍 Table: {table}\n\n"
+            "Ready to order?"
+        )
+
+    payload = {
+        "messaging_product": "whatsapp",
+        "to": to,
+        "type": "interactive",
+        "interactive": {
+            "type": "button",
+
+            "body": {
+                "text": body_text
+            },
+
+            "action": {
+                "buttons": [
+                    {
+                        "type": "reply",
+                        "reply": {
+                            "id": "VIEW_MENU",
+                            "title": "🍽 View Menu"
+                        }
+                    }
+                ]
+            }
+        }
+    }
+
+    response = requests.post(
+        GRAPH_URL,
+        headers=headers,
+        json=payload
+    )
+
+    print("📤 SEND VIEW MENU BUTTON RESPONSE")
+    print(response.status_code)
+    print(response.text)
+
+    return response.status_code == 200
+def send_category_buttons(to):
 
     headers = {
         "Authorization": f"Bearer {WHATSAPP_TOKEN}",
@@ -58,33 +115,44 @@ def send_reply_buttons(to):
             "type": "button",
 
             "body": {
-                "text": "🙏 Welcome to Mandi House ❤️\n\nTap below to view our menu."
+                "text": "🍽 Please choose a category:"
             },
 
             "action": {
                 "buttons": [
-
                     {
                         "type": "reply",
-
                         "reply": {
-                            "id": "VIEW_MENU",
-                            "title": "🍽 View Menu"
+                            "id": "CATEGORY_MANDI",
+                            "title": "🍗 Mandi"
+                        }
+                    },
+                    {
+                        "type": "reply",
+                        "reply": {
+                            "id": "CATEGORY_SHAWARMA",
+                            "title": "🌯 Shawarma"
+                        }
+                    },
+                    {
+                        "type": "reply",
+                        "reply": {
+                            "id": "CATEGORY_DRINKS",
+                            "title": "🥤 Drinks"
                         }
                     }
-
                 ]
             }
         }
     }
 
     response = requests.post(
-        url,
+        GRAPH_URL,
         headers=headers,
         json=payload
     )
 
-    print("📤 SEND BUTTON RESPONSE")
+    print("📤 SEND CATEGORY BUTTONS RESPONSE")
     print(response.status_code)
     print(response.text)
 

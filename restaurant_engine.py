@@ -20,6 +20,8 @@ SESSIONS = {}
 def process_message(phone, message):
 
     message = message.strip()
+    print("🔎 DEBUG PHONE:", phone)
+    print("🔎 DEBUG CUSTOMER:", dict(get_customer(phone)) if get_customer(phone) else None)
 
     # =====================================
     # DETECT TABLE QR
@@ -30,6 +32,7 @@ def process_message(phone, message):
 
         table = message.upper()
 
+        # Create session FIRST
         SESSIONS[phone] = {
             "step": "ASK_NAME",
 
@@ -47,9 +50,9 @@ def process_message(phone, message):
             "order_status": "NEW"
         }
 
-        # =================================
+        # =====================================
         # EXISTING CUSTOMER
-        # =================================
+        # =====================================
 
         if customer_exists(phone):
 
@@ -66,21 +69,20 @@ def process_message(phone, message):
 
             return "SHOW_RETURNING_MENU_BUTTON"
 
-        else:
-
-            print("========== CUSTOMER RECOGNITION ==========")
-            print("PHONE:", phone)
-            print("CUSTOMER EXISTS: False")
-            print("==========================================")
-        # =================================
+        # =====================================
         # NEW CUSTOMER
-        # =================================
+        # =====================================
 
-    return (
-         f"🙏 Welcome to Mandi House!\n\n"
+        print("========== CUSTOMER RECOGNITION ==========")
+        print("PHONE:", phone)
+        print("CUSTOMER EXISTS: False")
+        print("==========================================")
+
+        return (
+            f"🙏 Welcome to Mandi House!\n\n"
             f"📍 Table: {table}\n\n"
             "May I know your name?"
-        ) 
+        )
 
     # =====================================
     # SESSION NOT FOUND
@@ -106,28 +108,34 @@ def process_message(phone, message):
         session["customer_name"] = message
         session["step"] = "MAIN_MENU"
 
+        print("========== NEW CUSTOMER SAVED ==========")
+        print("PHONE:", phone)
+        print("CUSTOMER NAME:", message)
+        print("========================================")
+
         return "SHOW_MENU_BUTTON"
 
     # =====================================
-       # MAIN MENU
-       # =====================================
+    # MAIN MENU
+    # =====================================
+
     if session["step"] == "MAIN_MENU":
-   
-       # Customer tapped View Menu
-       if message == "VIEW_MENU":
-   
-           session["step"] = "CATEGORY"
-   
-           return "SHOW_CATEGORY_BUTTONS"
-   
-           # Keep typing 1 working temporarily
-           if message == "1":
-   
-               session["step"] = "CATEGORY"
-   
-               return "SHOW_CATEGORY_BUTTONS"
-   
-           return "Please use the button above."
+
+        # Customer tapped View Menu
+        if message == "VIEW_MENU":
+
+            session["step"] = "CATEGORY"
+
+            return "SHOW_CATEGORY_BUTTONS"
+
+        # Keep typing 1 working temporarily
+        if message == "1":
+
+            session["step"] = "CATEGORY"
+
+            return "SHOW_CATEGORY_BUTTONS"
+
+        return "Please use the button above."
 
     # =====================================
     # CATEGORY SELECTION
@@ -163,7 +171,6 @@ def process_message(phone, message):
 
     if session["step"] == "MANDI_MENU":
 
-        # Current menu numbering:
         # 1 = Chicken Mandi
         # 2 = Mutton Mandi
         # 3 = Fish Mandi
@@ -196,7 +203,6 @@ def process_message(phone, message):
 
     if session["step"] == "SHAWARMA_MENU":
 
-        # Current menu numbering:
         # 4 = Shawarma
 
         if message == "4":
@@ -225,7 +231,6 @@ def process_message(phone, message):
 
     if session["step"] == "DRINKS_MENU":
 
-        # Current menu numbering:
         # 5 = Water
         # 6 = Coke
         # 7 = Pepsi
