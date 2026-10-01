@@ -100,6 +100,7 @@ def send_reply_buttons(to, customer_name, table, returning=False):
     print(response.text)
 
     return response.status_code == 200
+
 def send_category_buttons(to):
 
     headers = {
@@ -153,6 +154,68 @@ def send_category_buttons(to):
     )
 
     print("📤 SEND CATEGORY BUTTONS RESPONSE")
+    print(response.status_code)
+    print(response.text)
+
+    return response.status_code == 200
+    print("📤 SEND CATEGORY BUTTONS RESPONSE")
+    print(response.status_code)
+    print(response.text)
+
+    return response.status_code == 200
+
+
+def send_mandi_buttons(to):
+
+    headers = {
+        "Authorization": f"Bearer {WHATSAPP_TOKEN}",
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        "messaging_product": "whatsapp",
+        "to": to,
+        "type": "interactive",
+        "interactive": {
+            "type": "button",
+            "body": {
+                "text": "🍗 Please choose your Mandi:"
+            },
+            "action": {
+                "buttons": [
+                    {
+                        "type": "reply",
+                        "reply": {
+                            "id": "1",
+                            "title": "🍗 Chicken Mandi ₹499"
+                        }
+                    },
+                    {
+                        "type": "reply",
+                        "reply": {
+                            "id": "2",
+                            "title": "🍖 Mutton Mandi ₹699"
+                        }
+                    },
+                    {
+                        "type": "reply",
+                        "reply": {
+                            "id": "3",
+                            "title": "🐟 Fish Mandi ₹599"
+                        }
+                    }
+                ]
+            }
+        }
+    }
+
+    response = requests.post(
+        GRAPH_URL,
+        headers=headers,
+        json=payload
+    )
+
+    print("📤 SEND MANDI BUTTONS RESPONSE")
     print(response.status_code)
     print(response.text)
 

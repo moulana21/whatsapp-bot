@@ -4,7 +4,8 @@ import os
 from whatsapp_api import (
     send_message,
     send_reply_buttons,
-    send_category_buttons
+    send_category_buttons,
+    send_mandi_buttons
 )
 
 from config import (
@@ -290,7 +291,11 @@ def webhook():
                 send_category_buttons(
                     sender
                 )
+            elif reply == "SHOW_MANDI_MENU":
 
+                 send_mandi_buttons(
+                    sender
+                ) 
             # =================================
             # NORMAL TEXT REPLY
             # =================================
