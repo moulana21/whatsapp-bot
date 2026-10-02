@@ -1,6 +1,8 @@
 from flask import Flask, request
 import os
 
+from flow_crypto import decrypt_request, encrypt_response
+
 from whatsapp_api import (
     send_message,
     send_reply_buttons,
@@ -351,17 +353,51 @@ print(
 
 
 # =====================================
-# START SERVER
+# WHATSAPP FLOW ENDPOINT
 # =====================================
 
-if __name__ == "__main__":
+@app.route(
+    "/flow",
+    methods=["POST"]
+)
+def flow():
 
-    print(
-        "🚀 Starting Restaurant Bot V3..."
-    )
+    try:
 
-    app.run(
-        host=HOST,
-        port=PORT,
-        debug=DEBUG
-    )
+        data = request.get_json()
+
+        print("\n==========================")
+        print("WHATSAPP FLOW REQUEST")
+        print(data)
+        print("==========================")
+
+        decrypted_body, aes_key, iv = decrypt_request(
+            data["encrypted_aes_key"],
+            data["encrypted_flow_data"],
+            data["initial_vector"]
+        )
+
+        print("DECRYPTED FLOW DATA:")
+        print(decrypted_body)
+
+        response_data = {
+            "data": {
+                "status": "active"
+            }
+        }
+
+        encrypted_response = encrypt_response(
+            response_data,
+            aes_key,
+            iv
+        )
+
+        return encrypted_response, 200, {
+            "Content-Type": "text/plain"
+        }
+
+    except Exception as e:
+
+        print("❌ FLOW ERROR:", e)
+
+        return "Flow processing error", 500
