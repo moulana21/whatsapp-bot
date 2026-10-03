@@ -14,19 +14,23 @@ PRIVATE_KEY_PATH = os.path.join(
 
 
 def load_private_key():
-    """
-    Load the encrypted PKCS#1 RSA private key.
-    """
-
     passphrase = os.getenv("FLOW_PASSPHRASE")
+    private_key_data = os.getenv("FLOW_PRIVATE_KEY")
 
     if not passphrase:
         raise RuntimeError(
             "FLOW_PASSPHRASE environment variable is missing"
         )
 
-    with open(PRIVATE_KEY_PATH, "rb") as key_file:
-        private_key_data = key_file.read()
+    if not private_key_data:
+        raise RuntimeError(
+            "FLOW_PRIVATE_KEY environment variable is missing"
+        )
+
+    private_key_data = private_key_data.replace(
+        "\\n",
+        "\n"
+    ).encode("utf-8")
 
     return RSA.import_key(
         private_key_data,
