@@ -364,6 +364,8 @@ def flow_key_check():
     return {
         "FLOW_PRIVATE_KEY_EXISTS": bool(private_key),
         "FLOW_PRIVATE_KEY_LENGTH": len(private_key) if private_key else 0,
+        "FLOW_PRIVATE_KEY_START": private_key[:30] if private_key else "",
+        "FLOW_PRIVATE_KEY_END": private_key[-30:] if private_key else "",
         "FLOW_PASSPHRASE_EXISTS": bool(passphrase)
     }, 200
 
