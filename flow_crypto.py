@@ -27,11 +27,9 @@ def load_private_key():
             "FLOW_PRIVATE_KEY environment variable is missing"
         )
 
-    private_key_data = private_key_data.replace(
-        "\\n",
-        "\n"
-    ).encode("utf-8")
-
+    private_key_data = base64.b64decode(
+      private_key_data
+)
     return RSA.import_key(
         private_key_data,
         passphrase=passphrase
