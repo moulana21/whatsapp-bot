@@ -356,12 +356,23 @@ print(
 # WHATSAPP FLOW ENDPOINT
 # =====================================
 
+@app.route("/flow-key-check")
+def flow_key_check():
+    private_key = os.getenv("FLOW_PRIVATE_KEY")
+    passphrase = os.getenv("FLOW_PASSPHRASE")
+
+    return {
+        "FLOW_PRIVATE_KEY_EXISTS": bool(private_key),
+        "FLOW_PRIVATE_KEY_LENGTH": len(private_key) if private_key else 0,
+        "FLOW_PASSPHRASE_EXISTS": bool(passphrase)
+    }, 200
+
+
 @app.route(
     "/flow",
     methods=["POST"]
 )
 def flow():
-
     try:
 
         data = request.get_json()
